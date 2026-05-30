@@ -206,6 +206,11 @@ table.setlist td select option{background:var(--bg3)}
     <button class="nav-btn" onclick="goTo(1)" id="nb1"><span class="num">2</span>Palco</button>
     <button class="nav-btn" onclick="goTo(2)" id="nb2"><span class="num">3</span>Alinhamento</button>
     <button class="nav-btn" onclick="goTo(3)" id="nb3"><span class="num">4</span>Rider</button>
+    <button class="btn btn-outline btn-sm" onclick="document.getElementById('importFile').click()">📂 Abrir Projeto</button>
+    <input type="file" id="importFile" style="display:none" accept=".txt,.json" onchange="importarProjeto(event)">
+    <button class="btn btn-outline btn-sm" onclick="exportarProjeto()">💾 Exportar Projeto (.txt)</button>
+    
+
   </nav>
 </header>
 
@@ -1006,6 +1011,82 @@ function renderRider(){
       <span>${bandLabel} · ${date||new Date().getFullYear()}</span>
     </div>
   `;
+}
+function exportarProjeto() {
+  // 1. Converte o objeto 'state' numa string formatada
+  const dadosString = JSON.stringify(state, null, 2);
+  
+  // 2. Cria um "Blob" (objeto de dados binários/texto) com MIME type de texto limpo
+  // Isto garante que passa em qualquer filtro de email corporativo
+  const blob = new Blob([dadosString], { type: 'text/plain;charset=utf-8' });
+  
+  // 3. Define o nome do ficheiro usando o nome da banda como referência
+  const nomeBanda = (state.meta && state.meta.band) ? state.meta.band.replace(/[^a-z0-9]/gi, '_').toLowerCase() : 'projeto';
+  const nomeFicheiro = `rider_${nomeBanda}.txt`;
+  
+  // 4. Cria um link temporário para simular o clique de download
+  const link = document.createElement('a');
+  link.href = URL.createObjectURL(blob);
+  link.download = nomeFicheiro;
+  
+  document.body.appendChild(link);
+  link.click();
+  
+  // Limpeza de memória
+  document.body.removeChild(link);
+  URL.revokeObjectURL(link.href);
+}
+
+function importarProjeto(event) {
+  const ficheiro = event.target.files[0];
+  if (!ficheiro) return;
+
+  const leitor = new FileReader();
+  
+  leitor.onload = function(e) {
+    try {
+      // 1. Converte o texto lido de volta para Objeto Javascript
+      const dadosImportados = JSON.parse(e.target.result);
+      
+      // 2. Validação básica de segurança para garantir que é um ficheiro do PalcoFácil
+      if (dadosImportados && Array.isArray(dadosImportados.musicians) && Array.isArray(dadosImportados.stageElements)) {
+        
+        // 3. Substitui o estado atual pelos dados importados
+        state = dadosImportados;
+        
+        // 4. Grava no localStorage para não perder em caso de F5
+        save();
+        
+        // 5. Atualiza visualmente os inputs de metadados
+        if (state.meta) {
+          if (document.getElementById('bandName')) document.getElementById('bandName').value = state.meta.band || '';
+          if (document.getElementById('eventName')) document.getElementById('eventName').value = state.meta.event || '';
+          if (document.getElementById('eventDate')) document.getElementById('eventDate').value = state.meta.date || '';
+          if (document.getElementById('eventVenue')) document.getElementById('eventVenue').value = state.meta.venue || '';
+        }
+        
+        // 6. Atualiza as tabelas e renderizações internas
+        renderMusicians();
+        
+        // Alerta o utilizador do sucesso
+        alert("Projeto carregado com sucesso! Podes agora editar ou ver o Rider.");
+        
+        // Redireciona para o primeiro separador para ver os dados atualizados
+        goTo(0);
+        
+      } else {
+        alert("Erro: O ficheiro não parece ser um projeto válido do PalcoFácil.");
+      }
+    } catch (erro) {
+      alert("Erro ao ler o ficheiro. Certifica-te de que selecionaste o ficheiro correto.");
+    }
+    
+    // Limpa o input para permitir selecionar o mesmo ficheiro novamente se necessário
+    document.getElementById('importFile').value = '';
+  };
+  
+  // Inicia a leitura do ficheiro como texto simples
+  leitor.readAsText(ficheiro);
 }
 
 function buildPrintStageMap(){

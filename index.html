@@ -1,0 +1,1074 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PalcoFácil — Rider de Palco</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,300&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:#0d0d0f; --bg2:#161618; --bg3:#1e1e22; --bg4:#252528;
+  --gold:#e8a020; --gold2:#f5c060; --gold-dim:rgba(232,160,32,.15); --gold-dim2:rgba(232,160,32,.08);
+  --text:#f0ede8; --text2:#a09890; --text3:#6a6460;
+  --border:rgba(255,255,255,.07); --border2:rgba(255,255,255,.12);
+  --red:#e05555; --green:#4caf7d; --blue:#5b9bd5;
+  --radius:10px; --radius-sm:6px;
+  --cell:60px; /* 1 metro = 60px */
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;font-size:14px;line-height:1.5}
+
+/* HEADER */
+header{background:var(--bg2);border-bottom:1px solid var(--border);padding:0 2rem;display:flex;align-items:center;gap:2rem;height:60px;position:sticky;top:0;z-index:100}
+.logo{font-family:'Bebas Neue',sans-serif;font-size:2rem;color:var(--gold);letter-spacing:2px;white-space:nowrap}
+.logo span{color:var(--text2);font-size:.9rem;letter-spacing:1px;margin-left:6px}
+nav{display:flex;gap:.25rem;flex:1}
+.nav-btn{background:none;border:none;color:var(--text2);font-family:'DM Sans',sans-serif;font-size:13px;font-weight:500;padding:6px 14px;border-radius:var(--radius-sm);cursor:pointer;transition:all .18s;white-space:nowrap}
+.nav-btn:hover{color:var(--text);background:var(--bg3)}
+.nav-btn.active{color:var(--gold);background:var(--gold-dim)}
+.nav-btn .num{display:inline-flex;align-items:center;justify-content:center;width:18px;height:18px;background:var(--bg4);border-radius:50%;font-size:10px;margin-right:6px;color:var(--text3)}
+.nav-btn.active .num{background:var(--gold-dim);color:var(--gold2)}
+
+main{max-width:1300px;margin:0 auto;padding:2rem}
+.section{display:none}.section.active{display:block}
+.section-title{font-family:'Bebas Neue',sans-serif;font-size:2.2rem;color:var(--gold);letter-spacing:2px;margin-bottom:.25rem}
+.section-sub{color:var(--text2);font-size:13px;margin-bottom:2rem}
+
+/* FORM */
+label{color:var(--text2);font-size:12px;font-weight:500;letter-spacing:.5px;text-transform:uppercase;display:block;margin-bottom:5px}
+input[type="text"],input[type="number"],select{background:var(--bg3);border:1px solid var(--border2);color:var(--text);border-radius:var(--radius-sm);padding:8px 12px;font-family:'DM Sans',sans-serif;font-size:14px;width:100%;outline:none;transition:border-color .15s}
+input:focus,select:focus{border-color:var(--gold)}
+select option{background:var(--bg3)}
+.row{display:grid;gap:1rem}
+.r2{grid-template-columns:1fr 1fr}
+.r3{grid-template-columns:2fr 2fr 1.5fr}
+
+/* BTNS */
+.btn{display:inline-flex;align-items:center;gap:6px;padding:8px 16px;border-radius:var(--radius-sm);border:none;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:500;cursor:pointer;transition:all .15s}
+.btn-gold{background:var(--gold);color:#1a1000}.btn-gold:hover{background:var(--gold2)}
+.btn-outline{background:none;border:1px solid var(--border2);color:var(--text2)}.btn-outline:hover{border-color:var(--gold);color:var(--gold)}
+.btn-danger{background:rgba(224,85,85,.12);color:var(--red);border:1px solid rgba(224,85,85,.25)}.btn-danger:hover{background:rgba(224,85,85,.22)}
+.btn-sm{padding:5px 10px;font-size:12px}
+
+/* TOGGLES */
+.tog{padding:5px 12px;border-radius:99px;border:1px solid var(--border2);background:none;color:var(--text2);font-family:'DM Sans',sans-serif;font-size:12px;cursor:pointer;transition:all .15s}
+.tog.on{background:var(--gold-dim);border-color:var(--gold);color:var(--gold)}
+
+.divider{height:1px;background:var(--border);margin:1.25rem 0}
+.flex{display:flex}.gap-sm{gap:.5rem}.gap-md{gap:1rem}.mt-1{margin-top:1rem}.mt-2{margin-top:2rem}
+.align-center{align-items:center}.jbetween{justify-content:space-between}.jend{justify-content:flex-end}
+
+/* ===== MODULE 1: MÚSICOS ===== */
+.add-form{background:var(--bg3);border:1px dashed var(--border2);border-radius:var(--radius);padding:1.5rem;margin-bottom:1.5rem}
+.add-form-title{font-weight:600;margin-bottom:1rem;color:var(--gold);font-size:14px}
+.tog-row{display:flex;gap:1.5rem;align-items:flex-start;flex-wrap:wrap;margin-top:.75rem}
+.tog-field{display:flex;flex-direction:column;gap:5px}
+.tog-field label{margin-bottom:0}
+.tog-group{display:flex;gap:.35rem}
+
+/* Musicians table */
+.mus-table{width:100%;border-collapse:collapse;margin-top:.5rem}
+.mus-table th{background:var(--bg3);color:var(--text3);font-size:11px;text-transform:uppercase;letter-spacing:.5px;padding:9px 14px;text-align:left;border-bottom:1px solid var(--border)}
+.mus-table td{padding:10px 14px;border-bottom:1px solid var(--border);vertical-align:middle;font-size:13px}
+.mus-table tr:last-child td{border-bottom:none}
+.mus-table tbody tr:hover td{background:rgba(255,255,255,.02)}
+.chip{display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:99px;font-size:11px;font-weight:500}
+.chip-y{background:rgba(76,175,125,.12);color:var(--green)}
+.chip-n{background:var(--bg4);color:var(--text3)}
+.chip-w{background:rgba(232,160,32,.12);color:var(--gold2)}
+
+/* ===== MODULE 2: PALCO ===== */
+.stage-layout{display:grid;grid-template-columns:200px 1fr;gap:1.5rem;align-items:start}
+@media(max-width:768px){.stage-layout{grid-template-columns:1fr}}
+.stage-panel{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:1rem}
+.stage-panel-title{font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:1px;margin-bottom:.75rem;font-weight:600}
+.drag-item{background:var(--bg3);border:1px solid var(--border2);border-radius:var(--radius-sm);padding:9px 12px;margin-bottom:6px;cursor:grab;display:flex;align-items:center;gap:10px;transition:all .15s;user-select:none;touch-action:none}
+.drag-item:hover{border-color:var(--gold);background:var(--gold-dim2)}
+.drag-item-sub{font-size:11px;color:var(--text3)}
+
+.stage-area-wrap{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:1.25rem}
+.stage-top-label{text-align:center;font-family:'Bebas Neue',sans-serif;font-size:.85rem;letter-spacing:4px;color:var(--text3);margin-bottom:.5rem}
+.stage-canvas{position:relative;overflow:hidden;border-radius:8px;border:2px solid var(--border2)}
+.stage-inner{position:relative;background:#131316}
+.stage-back-bar{height:28px;background:var(--bg4);border-bottom:2px solid var(--gold);display:flex;align-items:center;justify-content:center;font-size:10px;color:var(--text3);letter-spacing:3px;font-weight:600}
+.stage-front-bar{height:28px;background:var(--bg4);border-top:2px solid var(--border2);display:flex;align-items:center;justify-content:center;font-size:10px;color:var(--text3);letter-spacing:3px;font-weight:600}
+.stage-drop-zone{position:relative;touch-action:none}
+
+.stage-el{
+  position:absolute;width:var(--cell);height:var(--cell);background:var(--bg3);
+  border:1.5px solid var(--border2);border-radius:5px;cursor:move;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:2px;user-select:none;touch-action:none;transition:border-color .1s;
+  font-size:10px;text-align:center;overflow:hidden;z-index:2;
+}
+.stage-el:hover{border-color:var(--gold);z-index:10}
+.stage-el.dragging{opacity:.8;z-index:50;border-color:var(--gold)}
+.stage-el .el-abbr{font-size:9px;color:var(--text2);line-height:1.2;padding:0 3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:56px}
+.stage-el .el-name{font-size:9px;color:var(--text3);line-height:1.1;padding:0 3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:56px}
+.stage-el .el-del{position:absolute;top:-5px;right:-5px;width:14px;height:14px;background:var(--red);border-radius:50%;border:none;cursor:pointer;display:none;align-items:center;justify-content:center;font-size:8px;color:#fff;line-height:1;z-index:20}
+.stage-el:hover .el-del{display:flex}
+.stage-el.type-musician{border-color:rgba(232,160,32,.4);background:rgba(232,160,32,.06)}
+.stage-el.type-musician .el-name{color:var(--gold2)}
+.stage-scale{font-size:11px;color:var(--text3);text-align:right;margin-top:.5rem}
+.audience-bar{text-align:center;padding:6px;font-size:9px;color:var(--text3);letter-spacing:3px;background:var(--bg3);border-radius:0 0 8px 8px}
+.stage-hint{text-align:center;color:var(--text3);font-size:11px;margin-top:.75rem}
+
+.drag-ghost{position:fixed;width:var(--cell);height:var(--cell);background:var(--bg3);border:1.5px solid var(--gold);border-radius:5px;pointer-events:none;z-index:9999;opacity:.85;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;font-size:10px}
+
+/* ===== SETLIST & META ===== */
+.setlist-meta{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:1rem;margin-bottom:1.5rem;background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:1.25rem}
+table.setlist{width:100%;border-collapse:collapse}
+table.setlist th{background:var(--bg3);color:var(--text3);font-size:11px;font-weight:500;letter-spacing:.5px;text-transform:uppercase;padding:10px 12px;text-align:left;border-bottom:1px solid var(--border)}
+table.setlist td{padding:5px 8px;border-bottom:1px solid var(--border);vertical-align:middle}
+table.setlist tr:last-child td{border-bottom:none}
+table.setlist tr:hover td{background:rgba(255,255,255,.02)}
+.snum{width:26px;height:26px;background:var(--bg3);border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:'Bebas Neue',sans-serif;font-size:13px;color:var(--gold)}
+table.setlist td input,table.setlist td select{background:transparent;border:1px solid transparent;padding:5px 8px;border-radius:4px;font-size:13px;width:100%;color:var(--text);font-family:'DM Sans',sans-serif}
+table.setlist td input:hover,table.setlist td select:hover{border-color:var(--border2);background:var(--bg3)}
+table.setlist td input:focus,table.setlist td select:focus{border-color:var(--gold);background:var(--bg3);outline:none}
+table.setlist td select option{background:var(--bg3)}
+
+/* ===== MODULE 4: RIDER ===== */
+.rider-wrap{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden}
+.rider-toolbar{background:var(--bg3);padding:1rem 1.5rem;display:flex;gap:.75rem;align-items:center;border-bottom:1px solid var(--border)}
+.rider-body{padding:2.5rem;max-width:900px;margin:0 auto}
+
+.pr-input, .pr-select { width:100%; border:1px solid var(--border2); background:var(--bg3); color:var(--text); border-radius:4px; padding:6px 8px; font-size:12px; font-family:'DM Sans', sans-serif; outline:none; transition: border-color .15s; }
+.pr-input:focus, .pr-select:focus { border-color:var(--gold); }
+.pr-select option { background:var(--bg3); }
+
+.print-empty-row { display: none; } /* Oculto no ecrã, vísivel na impressão */
+
+/* Print styles */
+@media print{
+  @page { size: portrait; margin: 1cm; }
+  
+  header,.rider-toolbar,#s0,#s1,#s2,.nav-btn{display:none!important}
+  body{background:#fff!important;color:#000!important;font-size:12px;width:100%!important}
+  main{padding:0;max-width:100%;width:100%}
+  .section{display:block!important}
+  #s3{display:block!important}
+  .rider-wrap{border:none}
+  .rider-body{padding:0;max-width:100%}
+  
+  /* Esconder secções não pedidas na impressão */
+  .hide-on-print { display: none !important; }
+  
+  /* Evitar quebras de página feias e orfãs a meio de secções */
+  .pr-section { break-inside: avoid; page-break-inside: avoid; margin-bottom: 1.5rem; }
+  
+  /* Forçar Preto e Branco nas tabelas e títulos */
+  .pr-bandname{color:#000!important;font-size:2.2rem!important}
+  .pr-section h2{color:#000!important;border-left:3px solid #000!important;margin-bottom:.5rem!important}
+  .pr-table th{background:#fff!important;color:#000!important;border:1px solid #000!important;padding:5px 8px!important}
+  .pr-table td{border:1px solid #000!important;color:#000!important;padding:5px 8px!important}
+  .pr-table tr:nth-child(even) td{background:#fff!important}
+  .pr-badge{background:#fff!important;color:#000!important;border:1px solid #000!important}
+  .pr-color-reset{color:#000!important}
+  .pr-header{border-bottom:2px solid #000!important;margin-bottom:1.5rem!important;padding-bottom:1rem!important}
+  
+  /* Forçar inputs a texto limpo */
+  .pr-input, .pr-select { border:none!important; background:transparent!important; color:#000!important; padding:0!important; font-size:12px!important; appearance:none!important; -webkit-appearance:none; }
+  
+  /* Mostrar linhas extra para preencher 24 canais (altura ligeiramente mais compacta para poupar papel) */
+  .print-empty-row { display: table-row !important; height: 24px; }
+}
+
+.print-stage-wrap{display:none} 
+
+.pr-header{display:flex;align-items:flex-start;justify-content:space-between;padding-bottom:1.25rem;margin-bottom:1.75rem;border-bottom:2px solid var(--gold)}
+.pr-bandname{font-family:'Bebas Neue',sans-serif;font-size:3rem;color:var(--gold);letter-spacing:3px;line-height:1}
+.pr-badge{background:var(--gold-dim);color:var(--gold2);border:1px solid var(--gold);border-radius:4px;padding:4px 12px;font-size:11px;letter-spacing:1px;text-transform:uppercase;font-weight:600}
+.pr-section{margin-bottom:1.75rem}
+.pr-section h2{font-family:'Bebas Neue',sans-serif;font-size:1.15rem;letter-spacing:2px;color:var(--gold);border-left:3px solid var(--gold);padding-left:10px;margin-bottom:.85rem}
+.pr-table{width:100%;border-collapse:collapse;font-size:13px}
+.pr-table th{background:var(--bg3);color:var(--text2);font-size:11px;text-transform:uppercase;letter-spacing:.5px;padding:7px 11px;text-align:left;border:1px solid var(--border)}
+.pr-table td{padding:7px 11px;border:1px solid var(--border);vertical-align:middle}
+.pr-table tr:nth-child(even) td{background:rgba(255,255,255,.02)}
+.pr-stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(100px,1fr));gap:.75rem;margin-bottom:1.25rem}
+.pr-stat{background:var(--bg3);border-radius:6px;padding:.65rem 1rem;border:1px solid var(--border)}
+.pr-stat .val{font-family:'Bebas Neue',sans-serif;font-size:1.8rem;color:var(--gold)}
+.pr-stat .lbl{font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.5px}
+.pr-footer{margin-top:2rem;padding-top:1rem;border-top:1px solid var(--border);font-size:11px;color:var(--text3);display:flex;justify-content:space-between}
+
+.stage-print-grid{display:grid;position:relative;background:#fff}
+.stage-print-cell{width:40px;height:40px;border:1px solid #ddd}
+.stage-print-el{position:absolute;width:40px;height:40px;background:#f5f5f5;border:1.5px solid #999;border-radius:3px;display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:8px;text-align:center;overflow:hidden;font-family:sans-serif}
+.stage-print-el.musician-el{background:#fff8e0;border-color:#c8960a}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">Make A Rider<span>// por Diogo Russo</span></div>
+  <nav>
+    <button class="nav-btn active" onclick="goTo(0)" id="nb0"><span class="num">1</span>Músicos</button>
+    <button class="nav-btn" onclick="goTo(1)" id="nb1"><span class="num">2</span>Palco</button>
+    <button class="nav-btn" onclick="goTo(2)" id="nb2"><span class="num">3</span>Alinhamento</button>
+    <button class="nav-btn" onclick="goTo(3)" id="nb3"><span class="num">4</span>Rider</button>
+  </nav>
+</header>
+
+<main>
+
+<!-- ===== S1: MÚSICOS ===== -->
+<div class="section active" id="s0">
+  <div class="section-title">Informações Gerais & Músicos</div>
+  <div class="section-sub">Define os detalhes do evento e os membros da tua banda.</div>
+
+  <div class="setlist-meta">
+    <div><label>Nome da Banda / Artista</label><input type="text" id="bandName" placeholder="Ex: Os Trovadores" oninput="saveMeta()"></div>
+    <div><label>Evento / Concerto</label><input type="text" id="eventName" placeholder="Ex: Festival de Verão" oninput="saveMeta()"></div>
+    <div><label>Data</label><input type="text" id="eventDate" placeholder="Ex: 15 Jul 2025" oninput="saveMeta()"></div>
+    <div><label>Local</label><input type="text" id="eventVenue" placeholder="Ex: Teatro S. Luiz, Lisboa" oninput="saveMeta()"></div>
+  </div>
+
+  <div class="add-form">
+    <div class="add-form-title">+ Novo Músico</div>
+    <div class="row r3">
+      <div><label>Nome</label><input type="text" id="mName" placeholder="Ex: João Silva"></div>
+      <div>
+        <label>Instrumento / Função</label>
+        <select id="mInstr" onchange="handleInstrChange()">
+          <option value="">— seleciona —</option>
+          <option value="Voz Principal">Voz Principal</option>
+          <option value="Voz de Apoio">Voz de Apoio</option>
+          <option value="Guitarra Elétrica">Guitarra Elétrica</option>
+          <option value="Guitarra Acústica">Guitarra Acústica</option>
+          <option value="Baixo Elétrico">Baixo Elétrico</option>
+          <option value="Bateria">Bateria</option>
+          <option value="Teclado / Piano">Teclado / Piano</option>
+          <option value="Violino">Violino</option>
+          <option value="Trompete">Trompete</option>
+          <option value="Saxofone">Saxofone</option>
+          <option value="Percussão">Percussão</option>
+          <option value="DJ / Controlador">DJ / Controlador</option>
+          <option value="Outro">Outro</option>
+        </select>
+      </div>
+      
+      <div id="dynamicCol">
+        <!-- Amps -->
+        <div id="wrapAmp" style="display:none">
+          <label>Traz Amp próprio?</label>
+          <div class="tog-group" style="margin-top:6px">
+            <button class="tog" id="togAmpSim" onclick="togPair('Amp','Sim','Não')">Sim</button>
+            <button class="tog on" id="togAmpNão" onclick="togPair('Amp','Não','Sim')">Não</button>
+          </div>
+        </div>
+        <!-- Ligações (DI/Cabo ou Microfone) -->
+        <div id="wrapLigacao" style="display:none">
+          <label>Ligação ao PA</label>
+          <div class="tog-group" style="margin-top:6px">
+            <button class="tog on" id="togLigacaoCabo" onclick="togPair('Ligacao','Cabo','Mic')">Cabo (DI)</button>
+            <button class="tog" id="togLigacaoMic" onclick="togPair('Ligacao','Mic','Cabo')">Microfone</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <div class="flex gap-sm mt-1" style="justify-content:flex-end">
+      <button class="btn btn-outline btn-sm" onclick="clearForm()">Limpar</button>
+      <button class="btn btn-gold btn-sm" onclick="addMusician()">✚ Adicionar</button>
+    </div>
+  </div>
+
+  <!-- Table -->
+  <div style="background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden">
+    <table class="mus-table" id="musTable">
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Nome</th>
+          <th>Instrumento</th>
+          <th>Especificações</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody id="musTableBody">
+        <tr><td colspan="5" style="text-align:center;padding:2rem;color:var(--text3);font-size:13px">Nenhum músico adicionado ainda.</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="flex jend mt-2">
+    <button class="btn btn-gold" onclick="goTo(1)">Continuar → Desenho do Palco</button>
+  </div>
+</div>
+
+<!-- ===== S2: PALCO ===== -->
+<div class="section" id="s1">
+  <div class="section-title">Desenho do Palco</div>
+  <div class="section-sub">Ajusta o tamanho do palco e arrasta elementos para a grelha. Cada quadrado = 1 metro.</div>
+
+  <div class="flex gap-sm align-center" style="margin-bottom: 1.5rem; background: var(--bg2); padding: 1rem 1.25rem; border: 1px solid var(--border); border-radius: var(--radius); justify-content: space-between; flex-wrap: wrap;">
+    <div>
+      <span style="font-weight:600;font-size:14px;color:var(--gold);">Dimensões do Palco</span>
+      <div style="font-size:12px;color:var(--text3);margin-top:2px;">Ajusta o tamanho da grelha de palco (em metros)</div>
+    </div>
+    <div class="flex gap-md align-center" style="flex-wrap: wrap;">
+      <div class="flex gap-sm align-center">
+        <label style="margin:0;color:var(--text2);">Largura (m):</label>
+        <input type="number" id="stageW" value="12" min="4" max="30" style="width:70px;padding:6px;text-align:center;">
+      </div>
+      <div class="flex gap-sm align-center">
+        <label style="margin:0;color:var(--text2);">Profund. (m):</label>
+        <input type="number" id="stageH" value="7" min="3" max="20" style="width:70px;padding:6px;text-align:center;">
+      </div>
+      <button class="btn btn-outline btn-sm" onclick="updateStageSize()">Aplicar</button>
+    </div>
+  </div>
+
+  <div class="stage-layout">
+    <div>
+      <div class="stage-panel">
+        <div class="stage-panel-title">Músicos</div>
+        <div id="panelMusicians"></div>
+        <div class="divider"></div>
+        <div class="stage-panel-title">Elementos</div>
+        <div id="panelItems"></div>
+        <div class="divider"></div>
+        <button class="btn btn-danger btn-sm" style="width:100%" onclick="clearStage()">Limpar Palco</button>
+      </div>
+    </div>
+    <div class="stage-area-wrap">
+      <div class="stage-top-label">— FUNDO DO PALCO —</div>
+      <div class="stage-canvas" id="stageCanvas">
+        <div class="stage-back-bar">BACKLINE</div>
+        <div class="stage-drop-zone" id="stageDropZone">
+          <div class="stage-inner" id="stageInner"></div>
+        </div>
+        <div class="stage-front-bar">FRENTE DO PALCO</div>
+      </div>
+      <div class="audience-bar">◈ AUDIÊNCIA ◈</div>
+      <div class="flex jbetween align-center" style="margin-top:.5rem">
+        <div class="stage-hint">Arrasta para posicionar · Clica ✕ para remover</div>
+        <div class="stage-scale" id="stageScaleLabel"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="flex gap-sm mt-2 jend">
+    <button class="btn btn-outline" onclick="goTo(0)">← Voltar</button>
+    <button class="btn btn-gold" onclick="goTo(2)">Continuar → Alinhamento</button>
+  </div>
+</div>
+
+<!-- ===== S3: SETLIST ===== -->
+<div class="section" id="s2">
+  <div class="section-title">Alinhamento</div>
+  <div class="section-sub">Define a ordem das músicas, quem canta e notas para o técnico.</div>
+
+  <div style="background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden">
+    <div class="flex jbetween align-center" style="padding:.85rem 1.25rem;border-bottom:1px solid var(--border)">
+      <span style="font-weight:600;font-size:14px">Lista de Músicas</span>
+      <div class="flex gap-sm">
+        <button class="btn btn-outline btn-sm" onclick="removeSong()">− Remover</button>
+        <button class="btn btn-outline btn-sm" onclick="addSong()">+ Adicionar</button>
+      </div>
+    </div>
+    <div style="overflow-x:auto">
+    <table class="setlist">
+      <thead>
+        <tr>
+          <th style="width:40px">#</th>
+          <th>Título</th>
+          <th>Vocalista</th>
+          <th>Tom</th>
+          <th>Trocas de Instrumento</th>
+          <th>Notas</th>
+        </tr>
+      </thead>
+      <tbody id="setlistBody"></tbody>
+    </table>
+    </div>
+  </div>
+
+  <div class="flex gap-sm mt-2 jend">
+    <button class="btn btn-outline" onclick="goTo(1)">← Voltar</button>
+    <button class="btn btn-gold" onclick="goTo(3)">Gerar Rider →</button>
+  </div>
+</div>
+
+<!-- ===== S4: RIDER ===== -->
+<div class="section" id="s3">
+  <div class="section-title">Rider Técnico</div>
+  <div class="section-sub">Pronto a imprimir ou enviar ao técnico de som.</div>
+
+  <div class="rider-wrap">
+    <div class="rider-toolbar">
+      <button class="btn btn-gold" onclick="window.print()">🖨 Imprimir / PDF</button>
+      <button class="btn btn-outline" onclick="copyRider()">📋 Copiar texto</button>
+      <button class="btn btn-outline" onclick="goTo(0)">← Editar</button>
+      <span style="color:var(--text3);font-size:12px;margin-left:auto">PalcoFácil</span>
+    </div>
+    <div class="rider-body">
+      <div id="riderDoc"></div>
+    </div>
+  </div>
+</div>
+
+</main>
+
+<script>
+// ===================== STATE =====================
+let state = { musicians:[], stageElements:[], songs:[], stageCols:12, stageRows:7, channelEdits:{}, meta:{} };
+try{ 
+  const s=localStorage.getItem('palcofacil'); 
+  if(s) {
+    state={...state,...JSON.parse(s)};
+    if(!state.channelEdits) state.channelEdits = {};
+    if(!state.meta) state.meta = {};
+
+    // Limpeza de bugs antigos para utilizadores com dados na localStorage
+    if(state.musicians) {
+      state.musicians.forEach(m => {
+        const needsAmp = ['Guitarra Elétrica','Baixo Elétrico'].includes(m.instr);
+        if(!needsAmp) m.amp = null; 
+        const isVocal = ['Voz Principal','Voz de Apoio'].includes(m.instr);
+        if(isVocal) m.ligacao = 'Mic';
+        const isDrums = m.instr === 'Bateria';
+        if(isDrums) m.ligacao = 'Kit Mics';
+      });
+    }
+  } 
+}catch(e){}
+function save(){ try{localStorage.setItem('palcofacil',JSON.stringify(state));}catch(e){} }
+
+function saveMeta() {
+  state.meta = {
+    band: document.getElementById('bandName').value,
+    event: document.getElementById('eventName').value,
+    date: document.getElementById('eventDate').value,
+    venue: document.getElementById('eventVenue').value
+  };
+  save();
+}
+
+// Load Meta visually
+window.addEventListener('DOMContentLoaded', () => {
+  if (state.meta) {
+    if(document.getElementById('bandName')) document.getElementById('bandName').value = state.meta.band || '';
+    if(document.getElementById('eventName')) document.getElementById('eventName').value = state.meta.event || '';
+    if(document.getElementById('eventDate')) document.getElementById('eventDate').value = state.meta.date || '';
+    if(document.getElementById('eventVenue')) document.getElementById('eventVenue').value = state.meta.venue || '';
+  }
+});
+
+// ===================== NAV =====================
+function goTo(i){
+  document.querySelectorAll('.section').forEach((s,j)=>s.classList.toggle('active',j===i));
+  document.querySelectorAll('.nav-btn').forEach((b,j)=>b.classList.toggle('active',j===i));
+  
+  if(i===1) {
+    document.getElementById('stageW').value = state.stageCols || 12;
+    document.getElementById('stageH').value = state.stageRows || 7;
+    renderStage();
+  }
+  if(i===2) renderSetlist();
+  if(i===3) renderRider();
+}
+
+// ===================== TOGGLES & DYNAMIC FIELDS =====================
+let togState={Amp:'Não', Ligacao:'Cabo'};
+
+function handleInstrChange(){
+  const i = document.getElementById('mInstr').value;
+  const needsAmp = ['Guitarra Elétrica','Baixo Elétrico'].includes(i);
+  const needsLigacao = ['Guitarra Acústica','Teclado / Piano','Violino','Trompete','Saxofone','Percussão','DJ / Controlador','Outro'].includes(i);
+
+  document.getElementById('wrapAmp').style.display = needsAmp ? 'block' : 'none';
+  document.getElementById('wrapLigacao').style.display = needsLigacao ? 'block' : 'none';
+}
+
+function togPair(k,v,o){
+  togState[k]=v;
+  document.getElementById('tog'+k+v).classList.add('on');
+  document.getElementById('tog'+k+o).classList.remove('on');
+}
+
+// ===================== INSTRUMENTS =====================
+const instrAbbr={
+  'Voz Principal':'Voz P','Voz de Apoio':'Voz A','Guitarra Elétrica':'Guit E',
+  'Guitarra Acústica':'Guit A','Baixo Elétrico':'Baixo','Bateria':'Bateria',
+  'Teclado / Piano':'Tecl','Violino':'Violino','Trompete':'Trompt',
+  'Saxofone':'Sax','Percussão':'Perc','DJ / Controlador':'DJ','Outro':'Outro'
+};
+const instrIcon={
+  'Voz Principal':'🎤','Voz de Apoio':'🎙','Guitarra Elétrica':'🎸','Guitarra Acústica':'🎸',
+  'Baixo Elétrico':'🎸','Bateria':'🥁','Teclado / Piano':'🎹','Violino':'🎻',
+  'Trompete':'🎺','Saxofone':'🎷','Percussão':'🪘','DJ / Controlador':'🎚','Outro':'🎵'
+};
+function abbr(instr){ return instrAbbr[instr]||instr; }
+function icon(instr){ return instrIcon[instr]||'🎵'; }
+
+// ===================== MODULE 1 =====================
+function addMusician(){
+  const name=document.getElementById('mName').value.trim();
+  const instr=document.getElementById('mInstr').value;
+  if(!name||!instr){alert('Preenche nome e instrumento!');return;}
+  
+  const needsAmp = ['Guitarra Elétrica', 'Baixo Elétrico'].includes(instr);
+  const needsLigacao = ['Guitarra Acústica', 'Teclado / Piano', 'Violino', 'Trompete', 'Saxofone', 'Percussão', 'DJ / Controlador', 'Outro'].includes(instr);
+  const isVocal = ['Voz Principal', 'Voz de Apoio'].includes(instr);
+  const isDrums = instr === 'Bateria';
+  
+  let lig = null;
+  if (needsLigacao) lig = togState.Ligacao;
+  else if (isVocal) lig = 'Mic';
+  else if (isDrums) lig = 'Kit Mics';
+
+  state.musicians.push({
+    id:Date.now(), 
+    name, 
+    instr,
+    amp: needsAmp ? (togState.Amp==='Sim') : null,
+    ligacao: lig
+  });
+  
+  save(); clearForm(); renderMusicians();
+}
+
+function clearForm(){
+  document.getElementById('mName').value='';
+  document.getElementById('mInstr').value='';
+  togState.Amp='Não'; togState.Ligacao='Cabo';
+  
+  document.getElementById('togAmpSim').classList.remove('on');
+  document.getElementById('togAmpNão').classList.add('on');
+  document.getElementById('togLigacaoMic').classList.remove('on');
+  document.getElementById('togLigacaoCabo').classList.add('on');
+  
+  handleInstrChange();
+}
+
+function deleteMusician(id){
+  state.musicians=state.musicians.filter(m=>m.id!==id);
+  save(); renderMusicians();
+}
+
+function renderMusicians(){
+  const tbody=document.getElementById('musTableBody');
+  if(!state.musicians.length){
+    tbody.innerHTML='<tr><td colspan="5" style="text-align:center;padding:2rem;color:var(--text3);font-size:13px">Nenhum músico adicionado ainda.</td></tr>';
+    return;
+  }
+  tbody.innerHTML=state.musicians.map((m,i)=>{
+    let specs = [];
+    if(m.amp === true) specs.push('<span class="chip chip-y">Traz Amp próprio</span>');
+    if(m.amp === false) specs.push('<span class="chip chip-w">Precisa de Amp</span>');
+    
+    if(m.ligacao === 'Cabo') specs.push('<span class="chip chip-n">Cabo (DI)</span>');
+    if(m.ligacao === 'Mic') specs.push('<span class="chip chip-w">Microfone</span>');
+    if(m.ligacao === 'Kit Mics') specs.push('<span class="chip chip-n">Kit Mics</span>');
+
+    let specStr = specs.length > 0 ? specs.join(' ') : '—';
+    
+    return `
+      <tr>
+        <td style="color:var(--text3);font-size:12px">${i+1}</td>
+        <td style="font-weight:500">${m.name}</td>
+        <td>${icon(m.instr)} <span style="margin-left:4px">${m.instr}</span></td>
+        <td>${specStr}</td>
+        <td><button class="btn btn-danger btn-sm" onclick="deleteMusician(${m.id})">Remover</button></td>
+      </tr>
+    `
+  }).join('');
+}
+
+// ===================== MODULE 2: STAGE =====================
+const CELL=60;
+const baseItems=[
+  {type:'amp',    icon:'🔊', label:'Amplificador'},
+  {type:'monitor',icon:'📢', label:'Monitor'},
+  {type:'mic',    icon:'🎤', label:'Microfone'},
+  {type:'drums',  icon:'🥁', label:'Bateria'},
+  {type:'keys',   icon:'🎹', label:'Teclado'},
+  {type:'di',     icon:'📦', label:'Direct Box'},
+  {type:'power',  icon:'⚡', label:'Tomada'},
+  {type:'chair',  icon:'🪑', label:'Banco'},
+];
+
+function updateStageSize(){
+  const w=parseInt(document.getElementById('stageW').value);
+  const h=parseInt(document.getElementById('stageH').value);
+  if(w>=4) state.stageCols=w;
+  if(h>=3) state.stageRows=h;
+  
+  const maxW = (state.stageCols * CELL) - CELL;
+  const maxH = (state.stageRows * CELL) - CELL;
+  state.stageElements.forEach(el => {
+    if(el.x > maxW) el.x = Math.max(0, maxW);
+    if(el.y > maxH) el.y = Math.max(0, maxH);
+  });
+  
+  save(); buildStageGrid(); renderStageElements();
+}
+
+function renderStage(){ renderStagePanel(); buildStageGrid(); renderStageElements(); }
+
+function renderStagePanel(){
+  const pm=document.getElementById('panelMusicians');
+  if(!state.musicians.length){
+    pm.innerHTML='<div style="color:var(--text3);font-size:12px;padding:.5rem">Adiciona músicos no módulo 1</div>';
+  } else {
+    pm.innerHTML=state.musicians.map(m=>`
+      <div class="drag-item" data-type="musician" data-label="${m.name}" data-icon="${icon(m.instr)}" data-abbr="${abbr(m.instr)}">
+        <span>${icon(m.instr)}</span>
+        <div>
+          <div style="font-size:12px;font-weight:500">${m.name}</div>
+          <div class="drag-item-sub">${abbr(m.instr)}</div>
+        </div>
+      </div>
+    `).join('');
+    pm.querySelectorAll('.drag-item').forEach(div=>{
+      startPanelDrag(div, div.dataset.type, div.dataset.label, div.dataset.icon, div.dataset.abbr);
+    });
+  }
+
+  const pi=document.getElementById('panelItems');
+  pi.innerHTML=baseItems.map(it=>`
+    <div class="drag-item" data-type="${it.type}" data-label="${it.label}" data-icon="${it.icon}">
+      <span>${it.icon}</span>
+      <span style="font-size:13px">${it.label}</span>
+    </div>
+  `).join('');
+  pi.querySelectorAll('.drag-item').forEach(div=>{
+    startPanelDrag(div, div.dataset.type, div.dataset.label, div.dataset.icon, false);
+  });
+}
+
+function buildStageGrid(){
+  const dz=document.getElementById('stageDropZone');
+  const inner=document.getElementById('stageInner');
+  const cols=state.stageCols||12;
+  const rows=state.stageRows||7;
+  const w=cols*CELL, h=rows*CELL;
+  inner.style.width=w+'px';
+  inner.style.height=h+'px';
+  const svgLines=[];
+  for(let c=0;c<=cols;c++) svgLines.push(`<line x1="${c*CELL}" y1="0" x2="${c*CELL}" y2="${h}" stroke="rgba(255,255,255,.07)" stroke-width="1"/>`);
+  for(let r=0;r<=rows;r++) svgLines.push(`<line x1="0" y1="${r*CELL}" x2="${w}" y2="${r*CELL}" stroke="rgba(255,255,255,.07)" stroke-width="1"/>`);
+  inner.style.backgroundImage=`url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' width='${w}' height='${h}'>${svgLines.join('')}</svg>")`;
+  inner.style.backgroundRepeat='no-repeat';
+  document.getElementById('stageScaleLabel').textContent=`${cols}m × ${rows}m`;
+  dz.style.lineHeight='0';
+}
+
+function snapToGrid(px){ return Math.round(px/CELL)*CELL; }
+
+function renderStageElements(){
+  const inner=document.getElementById('stageInner');
+  inner.querySelectorAll('.stage-el').forEach(e=>e.remove());
+  state.stageElements.forEach(el=>createStageEl(el));
+}
+
+function createStageEl(el){
+  const inner=document.getElementById('stageInner');
+  const div=document.createElement('div');
+  div.className='stage-el'+(el.type==='musician'?' type-musician':'');
+  div.id=el.id;
+  div.style.left=el.x+'px'; div.style.top=el.y+'px';
+  div.style.width=CELL+'px'; div.style.height=CELL+'px';
+  div.innerHTML=`
+    <span style="font-size:18px;line-height:1">${el.icon}</span>
+    ${el.abbr?`<span class="el-abbr">${el.abbr}</span>`:''}
+    <span class="el-name">${el.label}</span>
+    <button class="el-del">✕</button>
+  `;
+  div.querySelector('.el-del').addEventListener('pointerdown',e=>{e.stopPropagation();deleteStageEl(el.id);});
+  makeElDraggable(div,el.id);
+  inner.appendChild(div);
+}
+
+function deleteStageEl(id){
+  state.stageElements=state.stageElements.filter(e=>e.id!==id);
+  const el=document.getElementById(id);
+  if(el)el.remove();
+  save();
+}
+
+function clearStage(){
+  if(confirm('Limpar todo o palco?')){
+    state.stageElements=[];
+    document.getElementById('stageInner').querySelectorAll('.stage-el').forEach(e=>e.remove());
+    save();
+  }
+}
+
+let ghost=null, ghostData=null;
+function startPanelDrag(div,type,label,icon,abbrVal){
+  div.addEventListener('pointerdown',e=>{
+    e.preventDefault();
+    ghostData={type,label,icon,abbr:abbrVal};
+    ghost=document.createElement('div');
+    ghost.className='drag-ghost';
+    ghost.innerHTML=`<span style="font-size:18px">${icon}</span>${abbrVal?`<span style="font-size:9px;color:var(--text2)">${abbrVal}</span>`:''}<span style="font-size:9px;color:var(--text3)">${label}</span>`;
+    ghost.style.left=(e.clientX-CELL/2)+'px'; ghost.style.top=(e.clientY-CELL/2)+'px';
+    document.body.appendChild(ghost);
+    document.addEventListener('pointermove',onGhostMove);
+    document.addEventListener('pointerup',onGhostUp);
+  });
+}
+function onGhostMove(e){
+  if(!ghost)return;
+  ghost.style.left=(e.clientX-CELL/2)+'px'; ghost.style.top=(e.clientY-CELL/2)+'px';
+}
+function onGhostUp(e){
+  if(ghost){ghost.remove();ghost=null;}
+  document.removeEventListener('pointermove',onGhostMove);
+  document.removeEventListener('pointerup',onGhostUp);
+  if(!ghostData)return;
+  const inner=document.getElementById('stageInner');
+  const rect=inner.getBoundingClientRect();
+  if(e.clientX<rect.left||e.clientX>rect.right||e.clientY<rect.top||e.clientY>rect.bottom){ghostData=null;return;}
+  let x=e.clientX-rect.left-CELL/2; let y=e.clientY-rect.top-CELL/2;
+  x=snapToGrid(x); y=snapToGrid(y);
+  x=Math.max(0,Math.min(x,rect.width-CELL)); y=Math.max(0,Math.min(y,rect.height-CELL));
+  const id='se_'+Date.now();
+  const newEl={id,type:ghostData.type,label:ghostData.label,icon:ghostData.icon,abbr:ghostData.abbr||'',x,y};
+  state.stageElements.push(newEl);
+  createStageEl(newEl); save(); ghostData=null;
+}
+
+function makeElDraggable(div,id){
+  div.addEventListener('pointerdown',e=>{
+    if(e.target.classList.contains('el-del'))return;
+    e.preventDefault();e.stopPropagation();
+    const inner=document.getElementById('stageInner');
+    const sx=e.clientX, sy=e.clientY;
+    const sl=parseInt(div.style.left)||0, st=parseInt(div.style.top)||0;
+    div.classList.add('dragging'); div.setPointerCapture(e.pointerId);
+    function onMove(ev){
+      const rect=inner.getBoundingClientRect();
+      let nx=sl+(ev.clientX-sx), ny=st+(ev.clientY-sy);
+      nx=Math.max(0,Math.min(nx,rect.width-CELL)); ny=Math.max(0,Math.min(ny,rect.height-CELL));
+      div.style.left=nx+'px'; div.style.top=ny+'px';
+      const el=state.stageElements.find(s=>s.id===id);
+      if(el){el.x=nx;el.y=ny;}
+    }
+    function onUp(){
+      const nx=snapToGrid(parseInt(div.style.left)||0);
+      const ny=snapToGrid(parseInt(div.style.top)||0);
+      const inner=document.getElementById('stageInner');
+      const maxX=inner.offsetWidth-CELL, maxY=inner.offsetHeight-CELL;
+      const fx=Math.max(0,Math.min(nx,maxX)), fy=Math.max(0,Math.min(ny,maxY));
+      div.style.left=fx+'px'; div.style.top=fy+'px';
+      const el=state.stageElements.find(s=>s.id===id);
+      if(el){el.x=fx;el.y=fy;}
+      div.classList.remove('dragging'); save();
+      div.removeEventListener('pointermove',onMove); div.removeEventListener('pointerup',onUp);
+    }
+    div.addEventListener('pointermove',onMove); div.addEventListener('pointerup',onUp);
+  });
+}
+
+// ===================== MODULE 3: SETLIST =====================
+function renderSetlist(){
+  const tbody=document.getElementById('setlistBody');
+  if(!state.songs.length) addSong();
+  const vocOpts=['—',...new Set(state.musicians.map(m=>m.name))];
+  tbody.innerHTML=state.songs.map((s,i)=>`
+    <tr>
+      <td><div class="snum">${i+1}</div></td>
+      <td><input type="text" value="${s.title||''}" oninput="updateSong(${i},'title',this.value)" placeholder="Título"></td>
+      <td>
+        <select onchange="updateSong(${i},'vocalist',this.value)">
+          ${vocOpts.map(v=>`<option ${s.vocalist===v?'selected':''}>${v}</option>`).join('')}
+        </select>
+      </td>
+      <td><input type="text" value="${s.key||''}" oninput="updateSong(${i},'key',this.value)" placeholder="Ex: A" style="max-width:70px"></td>
+      <td><input type="text" value="${s.changes||''}" oninput="updateSong(${i},'changes',this.value)" placeholder="Ex: Pedro → guitarra acústica"></td>
+      <td><input type="text" value="${s.notes||''}" oninput="updateSong(${i},'notes',this.value)" placeholder="Notas..."></td>
+    </tr>
+  `).join('');
+}
+function addSong(){ state.songs.push({title:'',vocalist:'',key:'',changes:'',notes:''}); save(); renderSetlist(); }
+function removeSong(){ if(state.songs.length>1){state.songs.pop();save();renderSetlist();} }
+function updateSong(i,f,v){ state.songs[i][f]=v; save(); }
+
+// ===================== MODULE 4: RIDER =====================
+function updateChEdit(id, field, val){
+  if(!state.channelEdits) state.channelEdits = {};
+  if(!state.channelEdits[id]) state.channelEdits[id] = {};
+  state.channelEdits[id][field] = val;
+  save();
+}
+
+function renderRider(){
+  const ms=state.musicians;
+  const songs=state.songs.filter(s=>s.title.trim());
+  const doc=document.getElementById('riderDoc');
+  
+  if(!ms.length){
+    doc.innerHTML='<div style="text-align:center;padding:3rem;color:var(--text3)">Adiciona músicos no módulo 1 para gerar o Rider.</div>';
+    return;
+  }
+
+  const bandMeta = state.meta || {};
+  const bandLabel = bandMeta.band || 'A Minha Banda';
+  const event = bandMeta.event || '';
+  const date = bandMeta.date || '';
+  const venue = bandMeta.venue || '';
+
+  const totalMons=state.stageElements.filter(e=>e.type==='monitor').length;
+  const needAmps=ms.filter(m=>m.amp === false);
+
+  // Order priority
+  const instrPriority = {
+    'Bateria': 1, 'Baixo Elétrico': 2, 'Percussão': 3, 'Teclado / Piano': 4,
+    'DJ / Controlador': 5, 'Guitarra Acústica': 6, 'Guitarra Elétrica': 7,
+    'Violino': 8, 'Trompete': 8, 'Saxofone': 8, 'Outro': 9, 'Voz de Apoio': 10, 'Voz Principal': 11
+  };
+  const getPrio = (m) => instrPriority[m.instr] || 99;
+  const sortedMs = [...ms].sort((a,b) => getPrio(a) - getPrio(b));
+
+  let channels = [];
+  sortedMs.forEach(m => {
+    if(m.instr === 'Bateria') {
+      const drumChans = [
+        { inst: 'Bombo', sugMic: 'Beta 52A ou equiv.', sugStand: 'Pequeno' },
+        { inst: 'Tarola Cima', sugMic: 'SM57 ou equiv.', sugStand: 'Pequeno' },
+        { inst: 'Tarola Baixo', sugMic: 'SM57 ou equiv.', sugStand: 'Pequeno' },
+        { inst: 'Hi-Hat', sugMic: 'Condensador pequeno', sugStand: 'Pequeno' },
+        { inst: 'Tom 1', sugMic: 'Dinâmico (ex: e604)', sugStand: 'Pequeno' },
+        { inst: 'Tom 2', sugMic: 'Dinâmico (ex: e604)', sugStand: 'Pequeno' },
+        { inst: 'Overhead L', sugMic: 'Condensador', sugStand: 'Grande' },
+        { inst: 'Overhead R', sugMic: 'Condensador', sugStand: 'Grande' }
+      ];
+      drumChans.forEach(dc => channels.push({ id: `bat_${dc.inst}`, inst: dc.inst, sugMic: dc.sugMic, sugStand: dc.sugStand }));
+    } else {
+      let inst = m.instr;
+      let sugMic = '';
+      let sugStand = 'Grande';
+
+      if(inst === 'Baixo Elétrico') { sugMic = 'DI ou SM57 no Amp'; sugStand = 'Pequeno'; }
+      else if(inst === 'Guitarra Elétrica') { sugMic = 'SM57 no Amp'; sugStand = 'Pequeno'; }
+      else if(inst === 'Guitarra Acústica' || inst === 'Violino' || inst === 'Saxofone' || inst === 'Trompete' || inst === 'Outro') {
+        if(m.ligacao === 'Cabo') { sugMic = 'DI'; sugStand = '—'; }
+        else { sugMic = 'SM57 / Condensador'; sugStand = 'Pequeno'; }
+      }
+      else if(inst.includes('Voz')) { sugMic = 'SM58 ou equiv.'; sugStand = 'Grande'; }
+      else if(inst === 'Teclado / Piano' || inst === 'DJ / Controlador') { 
+        if(m.ligacao === 'Cabo') { sugMic = 'DI Estéreo'; sugStand = '—'; inst += ' (L+R)'; }
+        else { sugMic = 'Microfones'; sugStand = 'Pequeno'; inst += ' (L+R)'; }
+      }
+      else { sugMic = 'A definir'; sugStand = 'Grande'; }
+
+      channels.push({ id: `ch_${m.id}`, inst: inst, sugMic: sugMic, sugStand: sugStand });
+    }
+  });
+
+  const numDIs = channels.filter(c => c.sugMic.includes('DI')).length;
+  const numMics = channels.length - numDIs;
+
+  doc.innerHTML=`
+    <div class="pr-header">
+      <div>
+        <div class="pr-bandname">${bandLabel}</div>
+        ${event?`<div style="color:var(--text2);font-size:13px;margin-top:3px">${event}${date?' · '+date:''}</div>`:''}
+        ${venue?`<div style="color:var(--text3);font-size:12px">${venue}</div>`:''}
+      </div>
+      <div style="text-align:right">
+        <div class="pr-badge">Rider Técnico</div>
+        <div style="color:var(--text3);font-size:11px;margin-top:6px" class="pr-color-reset">Gerado: ${new Date().toLocaleDateString('pt-PT')}</div>
+      </div>
+    </div>
+
+    <div class="pr-section hide-on-print">
+      <h2>RESUMO</h2>
+      <div class="pr-stats">
+        <div class="pr-stat"><div class="val">${ms.length}</div><div class="lbl">Músicos</div></div>
+        <div class="pr-stat"><div class="val">${channels.length}</div><div class="lbl">Canais</div></div>
+        <div class="pr-stat"><div class="val">${totalMons}</div><div class="lbl">Monitores no Palco</div></div>
+        <div class="pr-stat"><div class="val">${needAmps.length}</div><div class="lbl">Amps a fornecer</div></div>
+        <div class="pr-stat"><div class="val">${songs.length||'—'}</div><div class="lbl">Músicas</div></div>
+      </div>
+    </div>
+
+    <div class="pr-section hide-on-print">
+      <h2>MÚSICOS & EQUIPAMENTO</h2>
+      <table class="pr-table">
+        <thead><tr><th>#</th><th>Nome</th><th>Instrumento</th><th>Especificações</th></tr></thead>
+        <tbody>
+          ${ms.map((m,i)=>{
+            let specs = [];
+            if(m.amp === true) specs.push('<span style="color:var(--green)">Traz Amp próprio</span>');
+            if(m.amp === false) specs.push('<span style="color:var(--gold)">Precisa de Amp</span>');
+            
+            if(m.ligacao === 'Cabo') specs.push('Ligação: Cabo (DI)');
+            if(m.ligacao === 'Mic') specs.push('Microfone');
+            if(m.ligacao === 'Kit Mics') specs.push('Kit de Microfones');
+
+            let specStr = specs.length > 0 ? specs.join('<br>') : '—';
+            
+            return `<tr>
+              <td style="color:var(--text3)">${i+1}</td>
+              <td style="font-weight:600">${m.name}</td>
+              <td>${m.instr}</td>
+              <td>${specStr}</td>
+            </tr>`;
+          }).join('')}
+        </tbody>
+      </table>
+    </div>
+
+    ${channels.length?`
+    <div class="pr-section">
+      <h2>LISTA DE CANAIS (INPUT LIST)</h2>
+      <table class="pr-table">
+        <thead>
+          <tr>
+            <th style="width:40px">CH</th>
+            <th>Instrumento</th>
+            <th style="width:25%">Captação Sugerida</th>
+            <th style="width:30%">Microfone/DI (A usar)</th>
+            <th style="width:15%">Tripé</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${(()=>{
+            let inputRows = '';
+            const maxRows = Math.max(channels.length, 24);
+            for(let i=0; i<maxRows; i++) {
+              if(channels[i]) {
+                const c = channels[i];
+                const edit = state.channelEdits[c.id] || {};
+                const finalMic = edit.mic !== undefined ? edit.mic : c.sugMic;
+                const finalStand = edit.stand !== undefined ? edit.stand : c.sugStand;
+                inputRows += `<tr>
+                  <td style="font-weight:600">${String(i+1).padStart(2,'0')}</td>
+                  <td style="font-weight:500">${c.inst}</td>
+                  <td style="color:var(--text2);font-size:12px;vertical-align:middle;" class="pr-color-reset">${c.sugMic}</td>
+                  <td><input type="text" class="pr-input" value="${finalMic}" onchange="updateChEdit('${c.id}', 'mic', this.value)"></td>
+                  <td>
+                    <select class="pr-select" onchange="updateChEdit('${c.id}', 'stand', this.value)">
+                      <option value="Grande" ${finalStand==='Grande'?'selected':''}>Grande</option>
+                      <option value="Pequeno" ${finalStand==='Pequeno'?'selected':''}>Pequeno</option>
+                      <option value="—" ${finalStand==='—'?'selected':''}>—</option>
+                    </select>
+                  </td>
+                </tr>`;
+              } else {
+                inputRows += `<tr class="print-empty-row">
+                  <td style="font-weight:600">${String(i+1).padStart(2,'0')}</td>
+                  <td></td><td></td><td></td><td></td>
+                </tr>`;
+              }
+            }
+            return inputRows;
+          })()}
+        </tbody>
+      </table>
+    </div>`:''}
+
+    ${songs.length?`
+    <div class="pr-section hide-on-print">
+      <h2>ALINHAMENTO</h2>
+      <table class="pr-table">
+        <thead><tr><th>#</th><th>Título</th><th>Vocalista</th><th>Tom</th><th>Trocas</th><th>Notas</th></tr></thead>
+        <tbody>
+          ${songs.map((s,i)=>`
+            <tr>
+              <td style="font-weight:600">${String(i+1).padStart(2,'0')}</td>
+              <td style="font-weight:500">${s.title}</td>
+              <td>${s.vocalist||'—'}</td>
+              <td style="color:var(--text2)">${s.key||'—'}</td>
+              <td style="font-size:12px;color:var(--text2)">${s.changes||'—'}</td>
+              <td style="font-size:12px;color:var(--text2)">${s.notes||'—'}</td>
+            </tr>
+          `).join('')}
+        </tbody>
+      </table>
+    </div>`:''}
+
+    <div class="pr-section">
+      <h2>DISPOSIÇÃO EM PALCO</h2>
+      ${buildPrintStageMap()}
+    </div>
+
+    <div class="pr-section hide-on-print">
+      <h2>LISTA DE MATERIAL ADICIONAL</h2>
+      <table class="pr-table">
+        <thead><tr><th>Item</th><th>Qtd</th><th>Obs</th></tr></thead>
+        <tbody>
+          <tr><td>Monitores de palco</td><td>${totalMons}</td><td>Conforme mapa de palco</td></tr>
+          <tr><td>Canais p/ Microfones</td><td>~${numMics}</td><td>Baseado na input list</td></tr>
+          <tr><td>Canais Direct Box (DI)</td><td>~${numDIs}</td><td>Baseado na input list</td></tr>
+          <tr><td>Amplificadores (a fornecer)</td><td>${needAmps.length}</td><td>${needAmps.map(m=>m.instr+' ('+m.name+')').join(', ')||'—'}</td></tr>
+          <tr><td>Tomadas de energia (palco)</td><td>${ms.filter(m=>m.amp!==false&&m.instr!=='Voz Principal'&&m.instr!=='Voz de Apoio').length+2}</td><td>+2 reserva (Ex: backline, pedalboards, etc.)</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="pr-footer hide-on-print">
+      <span>Rider gerado com PalcoFácil</span>
+      <span>${bandLabel} · ${date||new Date().getFullYear()}</span>
+    </div>
+  `;
+}
+
+function buildPrintStageMap(){
+  const cols=state.stageCols||12, rows=state.stageRows||7;
+  const PCELL=40; // Tamanho base da célula no mapa do vetor
+  const labelHeight=30; // Altura reservada para os textos BACKLINE / FRENTE DO PALCO dentro do SVG
+  const w=cols*PCELL;
+  const h=(rows*PCELL) + (labelHeight * 2); // Adicionado espaço no topo e fundo da grelha para os textos
+  
+  let gridLines='';
+  // Desenhar linhas da grelha respeitando o desfasamento do rótulo do topo (labelHeight)
+  for(let c=0;c<=cols;c++) {
+    gridLines+=`<line x1="${c*PCELL}" y1="${labelHeight}" x2="${c*PCELL}" y2="${h - labelHeight}" stroke="#000" stroke-width="1" opacity="0.2"/>`;
+  }
+  for(let r=0;r<=rows;r++) {
+    gridLines+=`<line x1="0" y1="${labelHeight + (r*PCELL)}" x2="${w}" y2="${labelHeight + (r*PCELL)}" stroke="#000" stroke-width="1" opacity="0.2"/>`;
+  }
+  
+  let elems='';
+  state.stageElements.forEach(el=>{
+    const px=Math.round(el.x/60*PCELL);
+    // Transladar o elemento para baixo de forma a libertar a área útil da grelha abaixo do label de BACKLINE
+    const py=Math.round(el.y/60*PCELL) + labelHeight;
+    elems+=`<g transform="translate(${px},${py})">
+      <rect width="${PCELL}" height="${PCELL}" fill="#fff" stroke="#000" stroke-width="1.5" rx="3"/>
+      <text x="${PCELL/2}" y="${PCELL/2-4}" text-anchor="middle" dominant-baseline="middle" font-size="14" font-family="sans-serif" fill="#000">${el.icon}</text>
+      <text x="${PCELL/2}" y="${PCELL-6}" text-anchor="middle" font-size="7" font-weight="bold" font-family="sans-serif" fill="#000">${(el.abbr||el.label).substring(0,8)}</text>
+    </g>`;
+  });
+  
+  return `
+    <div style="font-size:12px;color:var(--text3);margin-bottom:.5rem" class="pr-color-reset">Cada quadrado = 1 metro · Palco: ${cols}m × ${rows}m</div>
+    <div style="max-width:100%; border:2px solid #000; background:#fff; position:relative; overflow:hidden; margin: 0 auto;">
+      <svg viewBox="0 0 ${w} ${h}" style="display:block; width:100%; height:auto; max-height: 450px; margin: 0 auto;">
+        <rect width="${w}" height="${h}" fill="#fff"/>
+        
+        <!-- Faixa de Fundo do Palco (BACKLINE) integrada diretamente no SVG, evitando overlap -->
+        <g>
+          <rect width="${w}" height="${labelHeight}" fill="#f5f5f5" stroke="#000" stroke-width="1"/>
+          <text x="${w/2}" y="${labelHeight/2}" text-anchor="middle" dominant-baseline="middle" font-size="11" font-weight="bold" letter-spacing="4" fill="#000">BACKLINE</text>
+        </g>
+        
+        ${gridLines}
+        ${elems}
+        
+        <!-- Faixa de Frente do Palco integrada diretamente no fundo do SVG, também sem overlap -->
+        <g transform="translate(0, ${h - labelHeight})">
+          <rect width="${w}" height="${labelHeight}" fill="#f5f5f5" stroke="#000" stroke-width="1"/>
+          <text x="${w/2}" y="${labelHeight/2}" text-anchor="middle" dominant-baseline="middle" font-size="11" font-weight="bold" letter-spacing="4" fill="#000">FRENTE DO PALCO</text>
+        </g>
+      </svg>
+    </div>
+  `;
+}
+
+function copyRider(){
+  navigator.clipboard.writeText(document.getElementById('riderDoc').innerText)
+    .then(()=>alert('Copiado!'));
+}
+
+// ===================== INIT =====================
+renderMusicians();
+if(!state.songs.length) state.songs=[{title:'',vocalist:'',key:'',changes:'',notes:''},{title:'',vocalist:'',key:'',changes:'',notes:''},{title:'',vocalist:'',key:'',changes:'',notes:''}];
+</script>
+</body>
+</html>
